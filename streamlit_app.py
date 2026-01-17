@@ -1,52 +1,46 @@
 import streamlit as st
 import google.generativeai as genai
 
-# 1. CONFIGURACIÓN DE LA VENTANA
-st.set_page_config(page_title="Asistente Virtual", layout="centered")
-
-st.title("🤖 Mi Asistente Inteligente")
-st.write("Bienvenido. Puedes hacerme cualquier consulta abajo.")
-
-# 2. TUS DATOS (Tu Key ya está aquí)
+# 1. TUS DATOS (API KEY DIRECTA)
 MI_API_KEY = "AIzaSyCda_36NM1gzZ3iXRqC36f4FTuDROmfBM0"
 
-# --- PEGA TUS INSTRUCCIONES AQUÍ ABAJO ---
+# 2. CONFIGURACIÓN SIMPLE DE LA PÁGINA
+st.set_page_config(page_title="Asistente IA", layout="centered")
+st.title("🤖 Chat con Gemini")
+
+# 3. PEGA TUS INSTRUCCIONES AQUÍ
 MIS_INSTRUCCIONES = """
 Eres un asistente experto y servicial. 
-Tu objetivo es ayudar a mis clientes de forma amable y profesional.
+Ayuda a mis clientes de forma amable.
 """
-# ------------------------------------------------------------
 
-# 3. LÓGICA PARA QUE FUNCIONE
+# 4. INICIO DE LA IA
 try:
     genai.configure(api_key=MI_API_KEY)
     
-    # CAMBIO AQUÍ: Usamos 'gemini-pro' que es el más estable para esta conexión
-    model = genai.GenerativeModel(
-        model_name="gemini-pro"
-    )
+    # Probamos con el nombre más básico posible
+    model = genai.GenerativeModel('gemini-1.5-flash-latest')
 
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
-    # Mostrar mensajes anteriores
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    # Chat en tiempo real
-    if prompt := st.chat_input("Escribe tu mensaje aquí..."):
+    if prompt := st.chat_input("Escribe tu consulta..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
 
         with st.chat_message("assistant"):
-            with st.spinner("Respondiendo..."):
-                # Enviamos las instrucciones junto con el mensaje para que no falle
-                full_prompt = f"{MIS_INSTRUCCIONES}\n\nUsuario: {prompt}"
-                response = model.generate_content(full_prompt)
-                st.markdown(response.text)
-                st.session_state.messages.append({"role": "assistant", "content": response.text})
+            # Metemos las instrucciones directo en el mensaje para evitar el error 404
+            mensaje_completo = f"{MIS_INSTRUCCIONES}\n\nPregunta del cliente: {prompt}"
+            response = model.generate_content(mensaje_completo)
+            
+            st.markdown(response.text)
+            st.session_state.messages.append({"role": "assistant", "content": response.text})
 
 except Exception as e:
     st.error(f"Error técnico: {e}")
+    st.info("Si el error persiste, intenta generar una NUEVA API Key en Google AI Studio.")
