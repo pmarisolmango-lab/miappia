@@ -1,12 +1,12 @@
 import streamlit as st
 import google.generativeai as genai
 
-# 1. TUS DATOS (API KEY DIRECTA)
+# 1. TUS DATOS (API KEY)
 MI_API_KEY = "AIzaSyCda_36NM1gzZ3iXRqC36f4FTuDROmfBM0"
 
-# 2. CONFIGURACIÓN SIMPLE DE LA PÁGINA
+# 2. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(page_title="Asistente IA", layout="centered")
-st.title("🤖 Chat con Gemini")
+st.title("🤖 Mi Chat Profesional")
 
 # 3. PEGA TUS INSTRUCCIONES AQUÍ
 MIS_INSTRUCCIONES = """
@@ -18,8 +18,8 @@ Ayuda a mis clientes de forma amable.
 try:
     genai.configure(api_key=MI_API_KEY)
     
-    # Probamos con el nombre más básico posible
-    model = genai.GenerativeModel('gemini-1.5-flash-latest')
+    # Nombre técnico exacto para evitar el error 404
+    model = genai.GenerativeModel('gemini-1.5-flash')
 
     if "messages" not in st.session_state:
         st.session_state.messages = []
@@ -34,13 +34,15 @@ try:
             st.markdown(prompt)
 
         with st.chat_message("assistant"):
-            # Metemos las instrucciones directo en el mensaje para evitar el error 404
-            mensaje_completo = f"{MIS_INSTRUCCIONES}\n\nPregunta del cliente: {prompt}"
-            response = model.generate_content(mensaje_completo)
+            # Combinamos instrucciones y pregunta en un solo bloque
+            prompt_final = f"{MIS_INSTRUCCIONES}\n\nPregunta: {prompt}"
+            
+            # Usamos una forma de llamado más simple
+            response = model.generate_content(prompt_final)
             
             st.markdown(response.text)
             st.session_state.messages.append({"role": "assistant", "content": response.text})
 
 except Exception as e:
     st.error(f"Error técnico: {e}")
-    st.info("Si el error persiste, intenta generar una NUEVA API Key en Google AI Studio.")
+    st.info("Si el error persiste, genera una NUEVA API KEY en AI Studio. A veces la primera tarda en activarse.")
