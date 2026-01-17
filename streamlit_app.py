@@ -1,39 +1,70 @@
 import streamlit as st
 import google.generativeai as genai
 
-# Configuración de la página
-st.set_page_config(page_title="Mi Asistente IA", layout="wide")
+# --- CONFIGURACIÓN DE LA INTERFAZ ---
+st.set_page_config(page_title="Asistente IA Profesional", layout="centered")
 
-# Barra lateral igual a AI Studio
-with st.sidebar:
-    st.title("⚙️ Configuración")
-    api_key = st.text_input("Pega tu API Key de Google", type="password")
-    st.info("Obtén tu llave en aistudio.google.com")
-    
-    st.divider()
-    model_choice = st.selectbox("Modelo", ["gemini-1.5-flash", "gemini-1.5-pro"])
-    temp = st.slider("Temperatura (Creatividad)", 0.0, 2.0, 1.0)
+# Estilo para que se vea más profesional
+st.markdown("""
+    <style>
+    .main {
+        background-color: #f5f7f9;
+    }
+    stButton>button {
+        width: 100%;
+        border-radius: 5px;
+        height: 3em;
+        background-color: #4285f4;
+        color: white;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-st.title("💬 Mi Chat Profesional")
+st.title("🤖 Mi Asistente Gemini")
+st.info("Bienvenido a tu asistente inteligente. Escribe tu consulta abajo.")
 
-if not api_key:
-    st.warning("Por favor, introduce tu API Key en la barra lateral para comenzar.")
-else:
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel(model_choice)
+# --- DATOS DE CONFIGURACIÓN ---
+# Tu API Key ya integrada
+MI_API_KEY = "AIzaSyCda_36NM1gzZ3iXRqC36f4FTuDROmfBM0" 
 
+# PEGA AQUÍ TUS INSTRUCCIONES DE GOOGLE AI STUDIO
+# (Lo que pusiste en 'System Instructions')
+MIS_INSTRUCCIONES = """
+Eres un asistente experto y servicial. 
+Tu objetivo es ayudar a mis clientes de forma amable y profesional.
+"""
+
+# --- LÓGICA DE CONEXIÓN ---
+try:
+    genai.configure(api_key=MI_API_KEY)
+    # Usamos Gemini 1.5 Flash que es rápido y económico
+    model = genai.GenerativeModel(
+        model_name="gemini-1.5-flash",
+        system_instruction=MIS_INSTRUCCIONES
+    )
+
+    # Inicializar el historial de chat
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
-    # Mostrar el chat
-    for msg in st.session_state.messages:
-        st.chat_message(msg["role"]).write(msg["content"])
+    # Mostrar mensajes previos
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
 
-    if prompt := st.chat_input("¿En qué puedo ayudarte?"):
+    # Entrada de usuario
+    if prompt := st.chat_input("¿En qué puedo ayudarte hoy?"):
+        # Guardar y mostrar mensaje del usuario
         st.session_state.messages.append({"role": "user", "content": prompt})
-        st.chat_message("user").write(prompt)
-        
-        # Respuesta de la IA
-        response = model.generate_content(prompt, generation_config={"temperature": temp})
-        st.session_state.messages.append({"role": "assistant", "content": response.text})
-        st.chat_message("assistant").write(response.text)
+        with st.chat_message("user"):
+            st.markdown(prompt)
+
+        # Generar y mostrar respuesta de la IA
+        with st.chat_message("assistant"):
+            with st.spinner("Pensando..."):
+                response = model.generate_content(prompt)
+                st.markdown(response.text)
+                st.session_state.messages.append({"role": "assistant", "content": response.text})
+
+except Exception as e:
+    st.error(f"Hubo un error de conexión: {e}")
